@@ -1,8 +1,10 @@
 
 # Monthly Report of The Look E-Commerce Data
 
-Page ini bertujuan untuk mendokumentasikan cara memperoleh monthly report berdasarkan **produk** dari The Look E-Commerce data dari BigQuery public menggunakan SQL BigQuery.
+Page ini bertujuan untuk mendokumentasikan cara memperoleh monthly report berdasarkan **produk** dengan jumlah item terjual terbanyak tiap bulannya dari The Look E-Commerce data dari BigQuery public data menggunakan SQL BigQuery.
+
 Query SQL tersebut akan menghasilkan temporary table dengan sample sebagai berikut.
+
 ![](https://github.com/auliaaaz/reportTheLookEcommerce/blob/main/result.jpg)
 
 ### Query
@@ -34,8 +36,8 @@ ORDER BY year DESC, month DESC
 ```
 
 ### Penjelasan
-Akan dijelaskan pada bagian paling pertama sebuah SQL query dijalankan yaitu pada inner query `a`
-```
+Akan dijelaskan pada bagian paling pertama SQL query ini dijalankan yaitu pada **inner query `a`**
+```sql
 (SELECT EXTRACT(MONTH FROM o.created_at) AS month,
                 EXTRACT(YEAR FROM o.created_at) AS year,
                 p.id AS product_id,
@@ -60,8 +62,8 @@ Akan dijelaskan pada bagian paling pertama sebuah SQL query dijalankan yaitu pad
 * product_name
 * total_item dengan menjumlahkan (`SUM`) semua num_of_item.
 * total_revenue dengan menjumlahkan (`SUM`) perkalian dari num_of_item dan sale_price, kemudian membulatkannya (`ROUND`) dengan mengambil 2 angka di belakang koma.
-* number_of_order dengan menghitung banyaknya (`COUNT`) pemesanan (order_id).
-* number_of_customer dengan menghitung banyaknya (`COUNT`) orang yang melakukan pesanan (user_id).
+* number_of_order dengan menghitung banyaknya (`COUNT`) pemesanan (order_id) yang unik (artinya, jika terdapat nilai pada order_id yang sama maka hanya salah satunya yang akan diambil)
+* number_of_customer dengan menghitung banyaknya (`COUNT`) orang yang melakukan pesanan (user_id) yang unik.
 
 2. Menggunakan query `FROM` sebagai referensi tabel yang digunakan dalam `SELECT`, yaitu `bigquery-public-data.thelook_ecommerce.order_items` alias `oi`.
 
@@ -71,10 +73,10 @@ Akan dijelaskan pada bagian paling pertama sebuah SQL query dijalankan yaitu pad
 
 4. Memfilter hasil dengan `WHERE` untuk hanya menampilkan status yang bukan `Cancelled` atau `Returned`.
 
-5. Mengelompokkan data berdasarkan: year, kemudian month, product_id, dan product_name.
+5. Mengelompokkan data (`GROUP BY`) berdasarkan: year, kemudian month, product_id, dan product_name.
 
-Middle query `b`
-```
+**Middle query `b`**
+```sql
 SELECT a.*, ROW_NUMBER() OVER(PARTITION BY a.year, a.month order by a.total_item desc) allmonth
     FROM
         ...
@@ -82,17 +84,20 @@ SELECT a.*, ROW_NUMBER() OVER(PARTITION BY a.year, a.month order by a.total_item
 ```
 Blok b memilih (`SELECT`) semua kolom dari blok `a`, kemudian menggunakan `ROW_NUMBER()` untuk memberikan nomor urut (`allmonth`) berdasarkan total_item secara descending dalam setiap partisi year dan month.
 
-Query terluar 
-```
+**Query terluar** 
+```sql
 SELECT month, year, product_id, product_name, total_item, total_revenue, number_of_order, number_of_customer
 FROM
     ...
 WHERE allmonth=1
 ORDER BY year DESC, month DESC
 ```
-1. Memilih (`SELECT`) kolom month, year, product_id, product_name, total_item, total_revenue, number_of_order, dan number_of_customer dari b dengan memfilter hanya baris di mana allmonth bernilai 1. Ini memastikan hanya baris teratas (dengan total_item terbanyak) untuk setiap kombinasi year dan month yang akan ditampilkan.
+1. Memilih (`SELECT`) kolom month, year, product_id, product_name, total_item, total_revenue, number_of_order, dan number_of_customer dari b dengan memfilter (`WHERE`) hanya baris di mana allmonth bernilai 1. Ini memastikan hanya baris teratas (dengan total_item terbanyak) untuk setiap kombinasi year dan month yang akan ditampilkan.
 
 2. Mengurutkan (`ORDER BY`) hasil berdasarkan year dan month secara descending.
+
+Note:
+AS: Alias 
 
 
 
