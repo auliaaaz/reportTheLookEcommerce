@@ -75,6 +75,9 @@ Akan dijelaskan pada bagian paling pertama SQL query ini dijalankan yaitu pada *
 
 5. Mengelompokkan data (`GROUP BY`) berdasarkan: year, kemudian month, product_id, dan product_name.
 
+Jadi, hasil dari blok inner query a ini menghasilkan suatu hasil sementara yang digunakan pada blok diluarnya, begitupun dengan hasil dari middle query b.
+
+
 **Middle query `b`**
 ```sql
 SELECT a.*, ROW_NUMBER() OVER(PARTITION BY a.year, a.month order by a.total_item desc) allmonth
@@ -95,9 +98,13 @@ ORDER BY year DESC, month DESC
 1. Memilih (`SELECT`) kolom month, year, product_id, product_name, total_item, total_revenue, number_of_order, dan number_of_customer dari b dengan memfilter (`WHERE`) hanya baris di mana allmonth bernilai 1. Ini memastikan hanya baris teratas (dengan total_item terbanyak) untuk setiap kombinasi year dan month yang akan ditampilkan.
 
 2. Mengurutkan (`ORDER BY`) hasil berdasarkan year dan month secara descending.
+   
 
 Note:
+
 AS: Alias 
+
+o.created_at: penggunaan `o` untuk merujuk pada table sumber kolom created_at berada
 
 
 
